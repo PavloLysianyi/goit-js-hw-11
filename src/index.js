@@ -57,7 +57,8 @@ window.addEventListener('scroll', async function () {
 
       const { images } = await performImageSearch(
         searchForm.elements.searchQuery.value,
-        currentPage
+        currentPage,
+        ITEMS_PER_PAGE
       );
 
       if (images.length > 0) {
