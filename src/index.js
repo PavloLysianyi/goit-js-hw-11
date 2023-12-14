@@ -102,23 +102,27 @@ function createImageCard(image) {
   const imageElement = document.createElement('a');
   imageElement.href = image.largeImageURL;
   imageElement.setAttribute('data-lightbox', 'gallery');
+
   const img = document.createElement('img');
   img.src = image.webformatURL;
   img.alt = image.tags;
   img.loading = 'lazy';
+
   imageElement.appendChild(img);
+  card.appendChild(imageElement);
 
   const infoContainer = document.createElement('div');
   infoContainer.classList.add('info');
 
-  ['Likes', 'Views', 'Comments', 'Downloads'].forEach(infoItem => {
+  const infoItems = ['Likes', 'Views', 'Comments', 'Downloads'];
+
+  infoItems.forEach(infoItem => {
     const p = document.createElement('p');
     p.classList.add('info-item');
     p.innerHTML = `<b>${infoItem}</b>: ${image[infoItem.toLowerCase()]}`;
     infoContainer.appendChild(p);
   });
 
-  card.appendChild(imageElement);
   card.appendChild(infoContainer);
 
   return card;
