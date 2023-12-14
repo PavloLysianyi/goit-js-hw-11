@@ -99,31 +99,23 @@ function createImageCard(image) {
   const card = document.createElement('div');
   card.classList.add('photo-card');
 
-  const imageElement = document.createElement('a');
-  imageElement.href = image.largeImageURL;
-  imageElement.setAttribute('data-lightbox', 'gallery');
-
-  const img = document.createElement('img');
-  img.src = image.webformatURL;
-  img.alt = image.tags;
-  img.loading = 'lazy';
-
-  imageElement.appendChild(img);
-  card.appendChild(imageElement);
-
-  const infoContainer = document.createElement('div');
-  infoContainer.classList.add('info');
-
   const infoItems = ['Likes', 'Views', 'Comments', 'Downloads'];
 
-  infoItems.forEach(infoItem => {
-    const p = document.createElement('p');
-    p.classList.add('info-item');
-    p.innerHTML = `<b>${infoItem}</b>: ${image[infoItem.toLowerCase()]}`;
-    infoContainer.appendChild(p);
-  });
-
-  card.appendChild(infoContainer);
+  card.innerHTML = `
+    <a href="${image.largeImageURL}" data-lightbox="gallery">
+      <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy">
+    </a>
+    <div class="info">
+      ${infoItems
+        .map(
+          infoItem =>
+            `<p class="info-item"><b>${infoItem}</b>: ${
+              image[infoItem.toLowerCase()]
+            }</p>`
+        )
+        .join('')}
+    </div>
+  `;
 
   return card;
 }
