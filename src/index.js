@@ -2,8 +2,6 @@ import SimpleLightbox from 'simplelightbox';
 import { Notify } from 'notiflix';
 import { performImageSearch } from './api';
 
-const ITEMS_PER_PAGE = 20;
-
 const searchForm = document.getElementById('search-form');
 const galleryContainer = document.querySelector('.gallery');
 const lightbox = new SimpleLightbox('.gallery a', {});
