@@ -1,17 +1,14 @@
 import SimpleLightbox from 'simplelightbox';
-import axios from 'axios';
-import Notiflix, { Notify } from 'notiflix';
+import { Notify } from 'notiflix';
+import { performImageSearch } from './api';
 
-const API_KEY = '41251616-25bd2bca1571a95c770fcbb5d';
-const API_URL = 'https://pixabay.com/api/';
 const ITEMS_PER_PAGE = 20;
 
 const searchForm = document.getElementById('search-form');
 const galleryContainer = document.querySelector('.gallery');
-const loadMoreButton = document.querySelector('.load-more');
+const lightbox = new SimpleLightbox('.gallery a', {});
 
 let currentPage = 1;
-const lightbox = new SimpleLightbox('.gallery a', {});
 
 searchForm.addEventListener('submit', async function (event) {
   event.preventDefault();
@@ -28,9 +25,19 @@ searchForm.addEventListener('submit', async function (event) {
   galleryContainer.innerHTML = '';
 
   try {
-    await performImageSearch(searchQuery);
+    const { images, totalHits } = await performImageSearch(
+      searchQuery,
+      currentPage
+    );
 
-    loadMoreButton.style.display = 'block';
+    if (images.length === 0) {
+      Notify.info(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
+    } else {
+      appendImagesToGallery(images);
+      Notify.success(`Hooray! We found ${totalHits} images.`);
+    }
   } catch (error) {
     console.error('Error during search:', error);
     Notify.failure(
@@ -39,65 +46,55 @@ searchForm.addEventListener('submit', async function (event) {
   }
 });
 
-loadMoreButton.addEventListener('click', async function () {
-  try {
-    currentPage++;
+window.addEventListener('scroll', async function () {
+  const scrollHeight = document.documentElement.scrollHeight;
+  const scrollTop = document.documentElement.scrollTop;
+  const clientHeight = document.documentElement.clientHeight;
 
-    await performImageSearch();
+  if (scrollTop + clientHeight >= scrollHeight - 100) {
+    try {
+      currentPage++;
 
-    const { height: cardHeight } = document
-      .querySelector('.gallery')
-      .firstElementChild.getBoundingClientRect();
+      const { images } = await performImageSearch(
+        searchForm.elements.searchQuery.value,
+        currentPage
+      );
 
-    window.scrollBy({
-      top: cardHeight * 2,
-      behavior: 'smooth',
-    });
+      if (images.length > 0) {
+        appendImagesToGallery(images);
 
-    lightbox.refresh();
-  } catch (error) {
-    console.error('Error during "Load more":', error);
-    Notify.failure(
-      'An error occurred during "Load more". Please try again later.'
-    );
+        const { height: cardHeight } = document
+          .querySelector('.gallery')
+          .firstElementChild.getBoundingClientRect();
+
+        window.scrollBy({
+          top: cardHeight * 2,
+          behavior: 'smooth',
+        });
+
+        lightbox.refresh();
+      }
+    } catch (error) {
+      console.error('Error during infinite scroll:', error);
+      Notify.failure(
+        'An error occurred during infinite scroll. Please try again later.'
+      );
+    }
   }
 });
 
-async function performImageSearch(searchQuery) {
-  try {
-    const response = await axios.get(API_URL, {
-      params: {
-        key: API_KEY,
-        q: searchQuery,
-        image_type: 'photo',
-        orientation: 'horizontal',
-        safesearch: true,
-        page: currentPage,
-        per_page: ITEMS_PER_PAGE,
-      },
-    });
+function appendImagesToGallery(images) {
+  const fragment = document.createDocumentFragment();
 
-    const imageData = response.data.hits;
+  images.map(image => {
+    const card = createImageCard(image);
+    fragment.appendChild(card);
+  });
 
-    if (imageData.length === 0) {
-      Notify.info(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
-    } else {
-      imageData.forEach(image => {
-        displayImageCard(image);
-      });
-
-      const totalHits = response.data.totalHits || 0;
-      Notify.success(`Hooray! We found ${totalHits} images.`);
-    }
-  } catch (error) {
-    console.error('Error during image search:', error);
-    throw error;
-  }
+  galleryContainer.appendChild(fragment);
 }
 
-function displayImageCard(image) {
+function createImageCard(image) {
   const card = document.createElement('div');
   card.classList.add('photo-card');
 
@@ -123,5 +120,5 @@ function displayImageCard(image) {
   card.appendChild(imageElement);
   card.appendChild(infoContainer);
 
-  galleryContainer.appendChild(card);
+  return card;
 }
