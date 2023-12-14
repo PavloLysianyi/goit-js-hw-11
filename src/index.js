@@ -7,6 +7,7 @@ const galleryContainer = document.querySelector('.gallery');
 const lightbox = new SimpleLightbox('.gallery a', {});
 
 let currentPage = 1;
+const ITEMS_PER_PAGE = 20;
 
 searchForm.addEventListener('submit', async function (event) {
   event.preventDefault();
@@ -25,7 +26,8 @@ searchForm.addEventListener('submit', async function (event) {
   try {
     const { images, totalHits } = await performImageSearch(
       searchQuery,
-      currentPage
+      currentPage,
+      ITEMS_PER_PAGE
     );
 
     if (images.length === 0) {
