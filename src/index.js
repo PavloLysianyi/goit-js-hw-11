@@ -10,6 +10,7 @@ const lightbox = new SimpleLightbox('.gallery a', {});
 let currentPage = 1;
 const ITEMS_PER_PAGE = 20;
 let isLoading = false;
+let totalLoadedImages = 0;
 
 searchForm.addEventListener('submit', async function (event) {
   event.preventDefault();
@@ -62,10 +63,12 @@ async function loadMoreImages(searchQuery) {
     );
   } else {
     appendImagesToGallery(hits);
+    totalLoadedImages += hits.length;
+
     Notify.success(`Hooray! We found ${totalHits} images.`);
     currentPage++;
 
-    if (currentPage * ITEMS_PER_PAGE >= totalHits) {
+    if (totalLoadedImages >= totalHits) {
       loadMoreButton.style.display = 'none';
       Notify.info("We're sorry, but you've reached the end of search results.");
     } else {
