@@ -65,10 +65,11 @@ async function loadMoreImages(searchQuery) {
     Notify.success(`Hooray! We found ${totalHits} images.`);
     currentPage++;
 
-    if (currentPage * ITEMS_PER_PAGE < totalHits) {
-      loadMoreButton.style.display = 'block';
-    } else {
+    if (currentPage * ITEMS_PER_PAGE >= totalHits) {
+      loadMoreButton.style.display = 'none';
       Notify.info("We're sorry, but you've reached the end of search results.");
+    } else {
+      loadMoreButton.style.display = 'block';
     }
   }
 
@@ -98,5 +99,6 @@ function appendImagesToGallery(images) {
     `;
   });
 
-  galleryContainer.innerHTML += cardsHTML.join('');
+  const allCardsHTML = cardsHTML.join('');
+  galleryContainer.insertAdjacentHTML('beforeend', allCardsHTML);
 }
