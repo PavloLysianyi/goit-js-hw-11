@@ -76,28 +76,27 @@ async function loadMoreImages(searchQuery) {
 }
 
 function appendImagesToGallery(images) {
-  const cardsHTML = images.map(image => createImageCard(image)).join('');
-  galleryContainer.innerHTML += cardsHTML;
-}
+  const cardsHTML = images.map(image => {
+    const infoItems = ['likes', 'views', 'comments', 'downloads'];
 
-function createImageCard(image) {
-  const infoItems = ['likes', 'views', 'comments', 'downloads'];
+    const infoHTML = infoItems
+      .map(
+        infoItem =>
+          `<p class="info-item"><b>${infoItem}</b>: ${image[infoItem]}</p>`
+      )
+      .join('');
 
-  const infoHTML = infoItems
-    .map(
-      infoItem =>
-        `<p class="info-item"><b>${infoItem}</b>: ${image[infoItem]}</p>`
-    )
-    .join('');
-
-  return `
-    <div class="photo-card">
-      <a href="${image.largeImageURL}" data-lightbox="gallery">
-        <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy">
-      </a>
-      <div class="info">
-        ${infoHTML}
+    return `
+      <div class="photo-card">
+        <a href="${image.largeImageURL}" data-lightbox="gallery">
+          <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy">
+        </a>
+        <div class="info">
+          ${infoHTML}
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  });
+
+  galleryContainer.innerHTML += cardsHTML.join('');
 }
