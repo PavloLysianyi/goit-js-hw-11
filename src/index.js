@@ -76,35 +76,28 @@ async function loadMoreImages(searchQuery) {
 }
 
 function appendImagesToGallery(images) {
-  const fragment = document.createDocumentFragment();
-
-  images.forEach(image => {
-    const card = createImageCard(image);
-    fragment.appendChild(card);
-  });
-
-  galleryContainer.appendChild(fragment);
+  const cardsHTML = images.map(image => createImageCard(image)).join('');
+  galleryContainer.innerHTML += cardsHTML;
 }
 
 function createImageCard(image) {
-  const card = document.createElement('div');
-  card.classList.add('photo-card');
-
   const infoItems = ['likes', 'views', 'comments', 'downloads'];
 
-  card.innerHTML = `
-    <a href="${image.largeImageURL}" data-lightbox="gallery">
-      <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy">
-    </a>
-    <div class="info">
-      ${infoItems
-        .map(
-          infoItem =>
-            `<p class="info-item"><b>${infoItem}</b>: ${image[infoItem]}</p>`
-        )
-        .join('')}
+  const infoHTML = infoItems
+    .map(
+      infoItem =>
+        `<p class="info-item"><b>${infoItem}</b>: ${image[infoItem]}</p>`
+    )
+    .join('');
+
+  return `
+    <div class="photo-card">
+      <a href="${image.largeImageURL}" data-lightbox="gallery">
+        <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy">
+      </a>
+      <div class="info">
+        ${infoHTML}
+      </div>
     </div>
   `;
-
-  return card;
 }
