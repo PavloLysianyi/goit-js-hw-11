@@ -10,7 +10,7 @@ export async function performImageSearch(
   perPage = ITEMS_PER_PAGE
 ) {
   try {
-    const response = await axios.get(API_URL, {
+    const { data } = await axios.get(API_URL, {
       params: {
         key: API_KEY,
         q: searchQuery,
@@ -22,10 +22,7 @@ export async function performImageSearch(
       },
     });
 
-    const imageData = response.data.hits;
-    const totalHits = response.data.totalHits || 0;
-
-    return { images: imageData, totalHits };
+    return data;
   } catch (error) {
     console.error('Error during image search:', error);
     throw error;

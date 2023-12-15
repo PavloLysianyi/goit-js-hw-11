@@ -4,14 +4,15 @@ import { performImageSearch } from './api';
 
 const searchForm = document.getElementById('search-form');
 const galleryContainer = document.querySelector('.gallery');
+const loadMoreButton = document.querySelector('.load-more');
 const lightbox = new SimpleLightbox('.gallery a', {});
 
 let currentPage = 1;
 const ITEMS_PER_PAGE = 20;
+let isLoading = false;
 
 searchForm.addEventListener('submit', async function (event) {
   event.preventDefault();
-
   const searchQuery = event.target.elements.searchQuery.value;
 
   if (searchQuery.trim() === '') {
@@ -20,24 +21,11 @@ searchForm.addEventListener('submit', async function (event) {
   }
 
   currentPage = 1;
-
   galleryContainer.innerHTML = '';
+  loadMoreButton.style.display = 'none';
 
   try {
-    const { images, totalHits } = await performImageSearch(
-      searchQuery,
-      currentPage,
-      ITEMS_PER_PAGE
-    );
-
-    if (images.length === 0) {
-      Notify.info(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
-    } else {
-      appendImagesToGallery(images);
-      Notify.success(`Hooray! We found ${totalHits} images.`);
-    }
+    await loadMoreImages(searchQuery);
   } catch (error) {
     console.error('Error during search:', error);
     Notify.failure(
@@ -46,48 +34,51 @@ searchForm.addEventListener('submit', async function (event) {
   }
 });
 
-window.addEventListener('scroll', async function () {
-  const scrollHeight = document.documentElement.scrollHeight;
-  const scrollTop = document.documentElement.scrollTop;
-  const clientHeight = document.documentElement.clientHeight;
-
-  if (scrollTop + clientHeight >= scrollHeight - 100) {
-    try {
-      currentPage++;
-
-      const { images } = await performImageSearch(
-        searchForm.elements.searchQuery.value,
-        currentPage,
-        ITEMS_PER_PAGE
-      );
-
-      if (images.length > 0) {
-        appendImagesToGallery(images);
-
-        const { height: cardHeight } = document
-          .querySelector('.gallery')
-          .firstElementChild.getBoundingClientRect();
-
-        window.scrollBy({
-          top: cardHeight * 2,
-          behavior: 'smooth',
-        });
-
-        lightbox.refresh();
-      }
-    } catch (error) {
-      console.error('Error during infinite scroll:', error);
-      Notify.failure(
-        'An error occurred during infinite scroll. Please try again later.'
-      );
-    }
+loadMoreButton.addEventListener('click', async function () {
+  try {
+    await loadMoreImages(searchForm.elements.searchQuery.value);
+  } catch (error) {
+    console.error('Error during loading more images:', error);
+    Notify.failure(
+      'An error occurred while loading more images. Please try again later.'
+    );
   }
 });
+
+async function loadMoreImages(searchQuery) {
+  if (isLoading) return;
+
+  isLoading = true;
+
+  const { hits, totalHits } = await performImageSearch(
+    searchQuery,
+    currentPage,
+    ITEMS_PER_PAGE
+  );
+
+  if (hits.length === 0) {
+    Notify.info(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+  } else {
+    appendImagesToGallery(hits);
+    Notify.success(`Hooray! We found ${totalHits} images.`);
+    currentPage++;
+
+    if (currentPage * ITEMS_PER_PAGE < totalHits) {
+      loadMoreButton.style.display = 'block';
+    } else {
+      Notify.info("We're sorry, but you've reached the end of search results.");
+    }
+  }
+
+  isLoading = false;
+}
 
 function appendImagesToGallery(images) {
   const fragment = document.createDocumentFragment();
 
-  images.map(image => {
+  images.forEach(image => {
     const card = createImageCard(image);
     fragment.appendChild(card);
   });
@@ -99,7 +90,7 @@ function createImageCard(image) {
   const card = document.createElement('div');
   card.classList.add('photo-card');
 
-  const infoItems = ['Likes', 'Views', 'Comments', 'Downloads'];
+  const infoItems = ['likes', 'views', 'comments', 'downloads'];
 
   card.innerHTML = `
     <a href="${image.largeImageURL}" data-lightbox="gallery">
@@ -109,9 +100,7 @@ function createImageCard(image) {
       ${infoItems
         .map(
           infoItem =>
-            `<p class="info-item"><b>${infoItem}</b>: ${
-              image[infoItem.toLowerCase()]
-            }</p>`
+            `<p class="info-item"><b>${infoItem}</b>: ${image[infoItem]}</p>`
         )
         .join('')}
     </div>
